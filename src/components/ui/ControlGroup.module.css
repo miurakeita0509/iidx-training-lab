@@ -1,0 +1,27 @@
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.controlGroup label {
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+}
+
+.controlGroup select,
+.controlGroup input[type="number"] {
+  background: #1a1a2e;
+  border: 1px solid #3a3a5a;
+  color: #e0e0e8;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  min-width: 80px;
+}
+
+.controlGroup input[type="range"] {
+  accent-color: #00d4ff;
+}

@@ -1,0 +1,21 @@
+.statBox {
+  background: #111122;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  padding: 10px 16px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #00d4ff;
+}
+
+.lbl {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+}

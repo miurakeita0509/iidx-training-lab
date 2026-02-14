@@ -1,0 +1,62 @@
+.sectionTitle {
+  font-size: 14px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.mappingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.mappingItem {
+  background: #111122;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mappingItem:hover {
+  border-color: #00d4ff;
+}
+
+.waiting {
+  border-color: #ffd700;
+  animation: pulse 1s infinite;
+}
+
+.mapLabel {
+  font-size: 12px;
+  color: #888;
+}
+
+.mapValue {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: #00d4ff;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.rawMonitor {
+  background: #0a0a14;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  padding: 12px;
+  font-family: 'Rajdhani', monospace;
+  font-size: 12px;
+  color: #888;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}

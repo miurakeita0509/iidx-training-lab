@@ -1,0 +1,61 @@
+.timerBar {
+  width: 100%;
+  max-width: 400px;
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.timerFill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+}
+
+.status {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 24px;
+  text-align: center;
+  min-height: 40px;
+  color: #ffd700;
+}
+
+.display {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 20px;
+}
+
+.recogKey {
+  width: 48px;
+  height: 64px;
+  border-radius: 6px;
+  border: 2px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: #555;
+}
+
+.active {
+  border-color: #00d4ff;
+  color: #00d4ff;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+}
+
+.correct {
+  border-color: #22cc44;
+  color: #22cc44;
+  box-shadow: 0 0 12px rgba(34, 204, 68, 0.3);
+}
+
+.wrong {
+  border-color: #cc2222;
+  color: #cc2222;
+  box-shadow: 0 0 12px rgba(204, 34, 34, 0.3);
+}

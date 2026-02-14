@@ -1,0 +1,42 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  background: linear-gradient(90deg, #0d0d1a, #1a1a2e);
+  border-bottom: 1px solid #2a2a4a;
+  min-height: 48px;
+  z-index: 10;
+}
+
+.title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #cc2222;
+  box-shadow: 0 0 6px #cc2222;
+  transition: all 0.3s;
+}
+
+.connected .dot {
+  background: #22cc44;
+  box-shadow: 0 0 6px #22cc44;
+}

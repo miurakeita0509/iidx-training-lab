@@ -1,0 +1,17 @@
+.targetArea {
+  min-height: 120px;
+  background: #111122;
+  border: 2px dashed #2a2a4a;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  color: #555;
+}
+
+.listening {
+  border-color: #00d4ff;
+  color: #00d4ff;
+}
