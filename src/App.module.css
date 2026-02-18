@@ -17,4 +17,15 @@
   .app {
     flex-direction: column;
   }
+  .content {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .content {
+    padding: 8px;
+    gap: 8px;
+  }
 }

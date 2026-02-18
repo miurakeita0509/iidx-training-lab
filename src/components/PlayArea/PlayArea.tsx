@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { Note, Lane, JudgmentType, JudgmentCounts } from '../../types';
+import type { Note, Lane, JudgmentType, JudgmentCounts, LaneResult, Side } from '../../types';
 import { JUDGMENT_COLORS, JUDGMENT_LABELS } from '../../types';
 import { judgeHit, calcFallTime, calcNoteInterval, calcAccuracy } from '../../logic/judgment';
 import { useInput } from '../../contexts/InputContext';
@@ -19,16 +19,31 @@ interface Props {
   running: boolean;
   bpm: number;
   hs: number;
-  getLanes: (step: number) => Lane[];
-  onStop: () => void;
+  getLanes: (step: number) => LaneResult;
+  side: Side;
 }
 
-const LANE_TYPES: ('scratch' | 'white' | 'blue')[] = ['scratch', 'white', 'blue', 'white', 'blue', 'white', 'blue', 'white'];
+type LaneConfig = { type: 'scratch' | 'white' | 'blue'; dataLane: string };
 
-export default function PlayArea({ running, bpm, hs, getLanes, onStop }: Props) {
+function buildLaneConfig(side: Side): LaneConfig[] {
+  const keys: LaneConfig[] = [
+    { type: 'white', dataLane: '0' },
+    { type: 'blue', dataLane: '1' },
+    { type: 'white', dataLane: '2' },
+    { type: 'blue', dataLane: '3' },
+    { type: 'white', dataLane: '4' },
+    { type: 'blue', dataLane: '5' },
+    { type: 'white', dataLane: '6' },
+  ];
+  const scratch: LaneConfig = { type: 'scratch', dataLane: 'scratch' };
+  return side === '1p' ? [scratch, ...keys] : [...keys, scratch];
+}
+
+export default function PlayArea({ running, bpm, hs, getLanes, side }: Props) {
   const { onKeyPress, onScratch } = useInput();
 
   const lanesRef = useRef<HTMLDivElement>(null);
+  const playAreaRef = useRef<HTMLDivElement>(null);
   const judgmentRef = useRef<HTMLDivElement>(null);
   const comboRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +59,7 @@ export default function PlayArea({ running, bpm, hs, getLanes, onStop }: Props) 
   const judgmentTimerRef = useRef(0);
 
   const [result, setResult] = useState<PlayResult | null>(null);
+  const laneConfig = buildLaneConfig(side);
 
   const flashLane = useCallback((lane: Lane) => {
     if (!lanesRef.current) return;
@@ -87,33 +103,30 @@ export default function PlayArea({ running, bpm, hs, getLanes, onStop }: Props) 
     scoreRef.current += scoreMul;
   }, [showJudgment]);
 
-  // Handle key press events
   useEffect(() => {
     if (!running) return;
     return onKeyPress((idx: number) => {
-      const result = judgeHit(idx, notesRef.current, performance.now());
-      if (result) {
-        if (result.note.el) result.note.el.remove();
+      const res = judgeHit(idx, notesRef.current, performance.now());
+      if (res) {
+        if (res.note.el) res.note.el.remove();
         flashLane(idx);
-        registerJudgment(result.judgment);
+        registerJudgment(res.judgment);
       }
     });
   }, [running, onKeyPress, flashLane, registerJudgment]);
 
-  // Handle scratch events
   useEffect(() => {
     if (!running) return;
     return onScratch(() => {
-      const result = judgeHit('scratch', notesRef.current, performance.now());
-      if (result) {
-        if (result.note.el) result.note.el.remove();
+      const res = judgeHit('scratch', notesRef.current, performance.now());
+      if (res) {
+        if (res.note.el) res.note.el.remove();
         flashLane('scratch');
-        registerJudgment(result.judgment);
+        registerJudgment(res.judgment);
       }
     });
   }, [running, onScratch, flashLane, registerJudgment]);
 
-  // Reset on start
   useEffect(() => {
     if (running) {
       notesRef.current = [];
@@ -126,7 +139,6 @@ export default function PlayArea({ running, bpm, hs, getLanes, onStop }: Props) 
       totalNotesRef.current = 0;
       judgmentsRef.current = { pgreat: 0, great: 0, good: 0, bad: 0, poor: 0 };
       setResult(null);
-      // Clear existing notes
       if (lanesRef.current) {
         lanesRef.current.querySelectorAll(`.${styles.note}`).forEach(n => n.remove());
       }
@@ -135,7 +147,6 @@ export default function PlayArea({ running, bpm, hs, getLanes, onStop }: Props) 
     }
   }, [running]);
 
-  // Show result when stopped
   useEffect(() => {
     if (!running && totalNotesRef.current > 0 && !result) {
       const j = judgmentsRef.current;
@@ -149,24 +160,32 @@ export default function PlayArea({ running, bpm, hs, getLanes, onStop }: Props) 
     }
   }, [running, result]);
 
-  // Game loop: generate notes + update positions
   useGameLoop((now: number) => {
     if (!running || !lanesRef.current) return;
 
     const fallTime = calcFallTime(bpm, hs);
     const interval = calcNoteInterval(bpm);
     const elapsed = now - startTimeRef.current;
+    const playH = playAreaRef.current?.clientHeight ?? 500;
+    const judgY = playH - 60;
 
-    // Generate notes
     if (elapsed >= 1000 && now - lastGenRef.current >= interval) {
       lastGenRef.current = now;
       const hitTime = now + fallTime;
-      const lanes = getLanes(stepRef.current);
+      const { lanes, chargeDuration } = getLanes(stepRef.current);
       stepRef.current++;
 
       for (const lane of lanes) {
         const el = document.createElement('div');
         el.className = styles.note;
+
+        // Charge note: taller element
+        if (chargeDuration) {
+          const noteH = Math.max(12, (chargeDuration / fallTime) * judgY);
+          el.style.height = noteH + 'px';
+          el.classList.add(styles.chargeNote);
+        }
+
         if (lane === 'scratch') {
           el.classList.add(styles.scratchNote);
           const laneEl = lanesRef.current.querySelector('[data-lane="scratch"]');
@@ -177,24 +196,22 @@ export default function PlayArea({ running, bpm, hs, getLanes, onStop }: Props) 
           const laneEl = lanesRef.current.querySelector(`[data-lane="${lane}"]`);
           if (laneEl) laneEl.appendChild(el);
         }
-        const note: Note = { lane, hitTime, judged: false, el };
+        const note: Note = { lane, hitTime, judged: false, el, duration: chargeDuration };
         notesRef.current.push(note);
         totalNotesRef.current++;
       }
     }
 
-    // Update note positions
-    const playH = 500;
-    const judgY = playH - 60;
     for (let i = notesRef.current.length - 1; i >= 0; i--) {
       const note = notesRef.current[i];
       if (note.judged) continue;
       const timeLeft = note.hitTime - now;
       const progress = 1 - timeLeft / fallTime;
-      const y = progress * judgY;
+      const noteH = note.el ? note.el.offsetHeight : 12;
+      // Anchor the bottom edge of the note at the judgment line position
+      const y = progress * judgY - (noteH - 12);
       if (note.el) note.el.style.top = y + 'px';
 
-      // POOR (missed)
       if (timeLeft < -150) {
         note.judged = true;
         if (note.el) note.el.remove();
@@ -206,13 +223,13 @@ export default function PlayArea({ running, bpm, hs, getLanes, onStop }: Props) 
 
   return (
     <div style={{ position: 'relative' }}>
-      <div className={styles.playArea}>
+      <div className={styles.playArea} ref={playAreaRef}>
         <div className={styles.lanesContainer} ref={lanesRef}>
-          {LANE_TYPES.map((type, i) => (
+          {laneConfig.map((cfg, i) => (
             <div
               key={i}
-              className={`${styles.lane} ${styles[type === 'scratch' ? 'scratchLane' : type === 'white' ? 'whiteLane' : 'blueLane']}`}
-              data-lane={type === 'scratch' ? 'scratch' : i - 1}
+              className={`${styles.lane} ${styles[cfg.type === 'scratch' ? 'scratchLane' : cfg.type === 'white' ? 'whiteLane' : 'blueLane']}`}
+              data-lane={cfg.dataLane}
             >
               <div className={styles.laneBg} />
               <div className={styles.laneFlash} />

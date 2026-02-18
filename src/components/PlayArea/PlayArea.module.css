@@ -9,6 +9,16 @@
   user-select: none;
 }
 
+@media (max-width: 900px) {
+  .playArea { height: 360px; }
+}
+
+@media (max-width: 600px) {
+  .playArea { height: 260px; }
+  .judgmentDisplay { font-size: 20px; }
+  .comboDisplay { font-size: 26px; }
+}
+
 .lanesContainer {
   position: absolute;
   inset: 0;
@@ -153,4 +163,10 @@
 
 .blueLane .laneFlash {
   background: linear-gradient(0deg, rgba(34, 68, 204, 0.3), transparent);
+}
+
+/* Charge note: taller body with rounded top cap */
+.chargeNote {
+  border-radius: 3px 3px 2px 2px;
+  opacity: 0.92;
 }

@@ -23,3 +23,38 @@
   flex-wrap: wrap;
   gap: 12px;
 }
+
+/* Key selection row for PatternPractice */
+.keySelect {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.keySelectLabel {
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+}
+
+.keySelectBtn {
+  padding: 4px 8px;
+  border: 1px solid #3a3a5a;
+  border-radius: 4px;
+  background: transparent;
+  color: #8888aa;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.keySelectBtn:hover { background: #1a1a2e; color: #c0c0d0; }
+.keySelectBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.keySelectActive {
+  background: #1a1a2e !important;
+  color: #00d4ff !important;
+  border-color: #00d4ff !important;
+}

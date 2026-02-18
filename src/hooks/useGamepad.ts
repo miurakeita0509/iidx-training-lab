@@ -103,14 +103,14 @@ export function useGamepad(mapping: Mapping) {
     }
 
     if (scratchDetected) {
-      s.scratchActive = true;
-      s.scratchDir = scratchDirection;
-      const now = performance.now();
-      if (now - s.lastScratchJudgeTime >= 60) {
-        s.lastScratchJudgeTime = now;
+      // Rising-edge detection: only fire onScratch when scratch transitions from inactive to active.
+      // This prevents BAD-hammering caused by repeated calls while the turntable is held/moving.
+      if (!s.scratchActive) {
         onScratch(scratchDirection);
       }
-      s.scratchActiveTimer = 6;
+      s.scratchActive = true;
+      s.scratchDir = scratchDirection;
+      s.scratchActiveTimer = 8; // ~133ms at 60fps before edge resets
     } else if (s.scratchActiveTimer > 0) {
       s.scratchActiveTimer--;
     } else {
