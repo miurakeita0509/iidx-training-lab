@@ -115,6 +115,20 @@
   transition: opacity 0.15s;
 }
 
+.fastSlowDisplay {
+  position: absolute;
+  bottom: 66px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
 .comboDisplay {
   position: absolute;
   bottom: 120px;

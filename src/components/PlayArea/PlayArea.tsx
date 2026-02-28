@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { Note, Lane, JudgmentType, JudgmentCounts, LaneResult, Side } from '../../types';
-import { JUDGMENT_COLORS, JUDGMENT_LABELS } from '../../types';
+import type { Note, Lane, JudgmentType, FastSlow, JudgmentCounts, LaneResult, Side } from '../../types';
+import { JUDGMENT_COLORS, JUDGMENT_LABELS, JUDGMENT_WINDOWS, FAST_SLOW_COLORS, JUDGMENT_OFFSET_KEY } from '../../types';
 import { judgeHit, calcFallTime, calcNoteInterval, calcAccuracy } from '../../logic/judgment';
 import { useInput } from '../../contexts/InputContext';
 import { useGameLoop } from '../../hooks/useGameLoop';
@@ -21,6 +21,7 @@ interface Props {
   hs: number;
   getLanes: (step: number) => LaneResult;
   side: Side;
+  onStop?: (result: PlayResult) => void; // if provided, result overlay is skipped
 }
 
 type LaneConfig = { type: 'scratch' | 'white' | 'blue'; dataLane: string };
@@ -39,12 +40,20 @@ function buildLaneConfig(side: Side): LaneConfig[] {
   return side === '1p' ? [scratch, ...keys] : [...keys, scratch];
 }
 
-export default function PlayArea({ running, bpm, hs, getLanes, side }: Props) {
-  const { onKeyPress, onScratch } = useInput();
+function getJudgmentOffset(): number {
+  const stored = localStorage.getItem(JUDGMENT_OFFSET_KEY);
+  if (stored === null) return 0;
+  const val = parseInt(stored, 10);
+  return isNaN(val) ? 0 : val;
+}
+
+export default function PlayArea({ running, bpm, hs, getLanes, side, onStop }: Props) {
+  const { onKeyPress, onScratch, getMergedInput } = useInput();
 
   const lanesRef = useRef<HTMLDivElement>(null);
   const playAreaRef = useRef<HTMLDivElement>(null);
   const judgmentRef = useRef<HTMLDivElement>(null);
+  const fastSlowRef = useRef<HTMLDivElement>(null);
   const comboRef = useRef<HTMLDivElement>(null);
 
   const notesRef = useRef<Note[]>([]);
@@ -57,9 +66,17 @@ export default function PlayArea({ running, bpm, hs, getLanes, side }: Props) {
   const totalNotesRef = useRef(0);
   const judgmentsRef = useRef<JudgmentCounts>({ pgreat: 0, great: 0, good: 0, bad: 0, poor: 0 });
   const judgmentTimerRef = useRef(0);
+  const offsetRef = useRef(0);
 
   const [result, setResult] = useState<PlayResult | null>(null);
   const laneConfig = buildLaneConfig(side);
+
+  // Read offset from localStorage on start
+  useEffect(() => {
+    if (running) {
+      offsetRef.current = getJudgmentOffset();
+    }
+  }, [running]);
 
   const flashLane = useCallback((lane: Lane) => {
     if (!lanesRef.current) return;
@@ -72,20 +89,33 @@ export default function PlayArea({ running, bpm, hs, getLanes, side }: Props) {
     setTimeout(() => { flash.style.opacity = '0'; }, 100);
   }, []);
 
-  const showJudgment = useCallback((type: JudgmentType) => {
+  const showJudgment = useCallback((type: JudgmentType, fastSlow: FastSlow) => {
     if (!judgmentRef.current) return;
     judgmentRef.current.textContent = JUDGMENT_LABELS[type];
     judgmentRef.current.style.color = JUDGMENT_COLORS[type];
     judgmentRef.current.style.opacity = '1';
+
+    // FAST/SLOW display
+    if (fastSlowRef.current) {
+      if (fastSlow) {
+        fastSlowRef.current.textContent = fastSlow.toUpperCase();
+        fastSlowRef.current.style.color = FAST_SLOW_COLORS[fastSlow];
+        fastSlowRef.current.style.opacity = '1';
+      } else {
+        fastSlowRef.current.style.opacity = '0';
+      }
+    }
+
     clearTimeout(judgmentTimerRef.current);
     judgmentTimerRef.current = window.setTimeout(() => {
       if (judgmentRef.current) judgmentRef.current.style.opacity = '0';
+      if (fastSlowRef.current) fastSlowRef.current.style.opacity = '0';
     }, 300);
   }, []);
 
-  const registerJudgment = useCallback((type: JudgmentType) => {
+  const registerJudgment = useCallback((type: JudgmentType, fastSlow: FastSlow = null) => {
     judgmentsRef.current[type]++;
-    showJudgment(type);
+    showJudgment(type, fastSlow);
 
     if (type === 'bad' || type === 'poor') {
       comboValRef.current = 0;
@@ -106,11 +136,11 @@ export default function PlayArea({ running, bpm, hs, getLanes, side }: Props) {
   useEffect(() => {
     if (!running) return;
     return onKeyPress((idx: number) => {
-      const res = judgeHit(idx, notesRef.current, performance.now());
+      const res = judgeHit(idx, notesRef.current, performance.now(), offsetRef.current);
       if (res) {
         if (res.note.el) res.note.el.remove();
         flashLane(idx);
-        registerJudgment(res.judgment);
+        registerJudgment(res.judgment, res.fastSlow);
       }
     });
   }, [running, onKeyPress, flashLane, registerJudgment]);
@@ -118,11 +148,11 @@ export default function PlayArea({ running, bpm, hs, getLanes, side }: Props) {
   useEffect(() => {
     if (!running) return;
     return onScratch(() => {
-      const res = judgeHit('scratch', notesRef.current, performance.now());
+      const res = judgeHit('scratch', notesRef.current, performance.now(), offsetRef.current);
       if (res) {
         if (res.note.el) res.note.el.remove();
         flashLane('scratch');
-        registerJudgment(res.judgment);
+        registerJudgment(res.judgment, res.fastSlow);
       }
     });
   }, [running, onScratch, flashLane, registerJudgment]);
@@ -144,21 +174,27 @@ export default function PlayArea({ running, bpm, hs, getLanes, side }: Props) {
       }
       if (comboRef.current) comboRef.current.style.opacity = '0';
       if (judgmentRef.current) judgmentRef.current.style.opacity = '0';
+      if (fastSlowRef.current) fastSlowRef.current.style.opacity = '0';
     }
   }, [running]);
 
   useEffect(() => {
     if (!running && totalNotesRef.current > 0 && !result) {
       const j = judgmentsRef.current;
-      setResult({
+      const r: PlayResult = {
         judgments: { ...j },
         maxCombo: maxComboRef.current,
         score: scoreRef.current,
         totalNotes: totalNotesRef.current,
         accuracy: calcAccuracy(j.pgreat, j.great, totalNotesRef.current),
-      });
+      };
+      if (onStop) {
+        onStop(r); // delegate result display to parent
+      } else {
+        setResult(r);
+      }
     }
-  }, [running, result]);
+  }, [running, result, onStop]);
 
   useGameLoop((now: number) => {
     if (!running || !lanesRef.current) return;
@@ -212,11 +248,24 @@ export default function PlayArea({ running, bpm, hs, getLanes, side }: Props) {
       const y = progress * judgY - (noteH - 12);
       if (note.el) note.el.style.top = y + 'px';
 
-      if (timeLeft < -150) {
+      if (timeLeft < -JUDGMENT_WINDOWS.bad) {
         note.judged = true;
         if (note.el) note.el.remove();
         registerJudgment('poor');
         notesRef.current.splice(i, 1);
+      }
+    }
+
+    // Scratch polling: while turntable is spinning and a scratch note is in the BAD window,
+    // judge it. This handles cases where the user started spinning before the rising edge
+    // fired (avoids missing notes due to timing of edge detection).
+    const merged = getMergedInput();
+    if (merged.scratchActive) {
+      const res = judgeHit('scratch', notesRef.current, now, offsetRef.current);
+      if (res) {
+        if (res.note.el) res.note.el.remove();
+        flashLane('scratch');
+        registerJudgment(res.judgment, res.fastSlow);
       }
     }
   });
@@ -238,6 +287,7 @@ export default function PlayArea({ running, bpm, hs, getLanes, side }: Props) {
         </div>
         <div className={styles.judgmentLine} />
         <div className={styles.judgmentDisplay} ref={judgmentRef} />
+        <div className={styles.fastSlowDisplay} ref={fastSlowRef} />
         <div className={styles.comboDisplay} ref={comboRef} />
         <div className={styles.playInfo}>BPM {bpm} | HS {hs.toFixed(1)}</div>
       </div>

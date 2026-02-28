@@ -1,4 +1,4 @@
-export type Mode = 'pattern' | 'scratch' | 'recognition' | 'speed' | 'settings';
+export type Mode = 'pattern' | 'scratch' | 'recognition' | 'speed' | 'settings' | 'play';
 export type Side = '1p' | '2p';
 
 export type PatternType = 'stairs' | 'reverse-stairs' | 'trill' | 'chords' | 'denim' | 'chord-stairs' | 'random' | 'charge';
@@ -6,6 +6,7 @@ export type PatternType = 'stairs' | 'reverse-stairs' | 'trill' | 'chords' | 'de
 export type ScratchType = 'scratch-only' | 'scratch-keys' | 'scratch-chords' | 'rapid-scratch' | 'bss';
 
 export type JudgmentType = 'pgreat' | 'great' | 'good' | 'bad' | 'poor';
+export type FastSlow = 'fast' | 'slow' | null;
 
 export type Lane = number | 'scratch'; // 0-6 for keys, 'scratch' for turntable
 
@@ -85,10 +86,10 @@ export const DEFAULT_MAPPING: Mapping = {
 };
 
 export const JUDGMENT_WINDOWS = {
-  pgreat: 20,
-  great: 50,
-  good: 100,
-  bad: 150,
+  pgreat: 16.67,  // 1 frame @ 60fps
+  great: 33.33,   // 2 frames @ 60fps
+  good: 116.67,   // 7 frames @ 60fps
+  bad: 250,       // 15 frames @ 60fps
 } as const;
 
 export const JUDGMENT_COLORS: Record<JudgmentType, string> = {
@@ -106,6 +107,15 @@ export const JUDGMENT_LABELS: Record<JudgmentType, string> = {
   bad: 'BAD',
   poor: 'POOR',
 };
+
+export const FAST_SLOW_COLORS = {
+  fast: '#44aaff',
+  slow: '#ff6644',
+} as const;
+
+export const JUDGMENT_OFFSET_KEY = 'judgment-offset';
+export const JUDGMENT_OFFSET_MIN = -99;
+export const JUDGMENT_OFFSET_MAX = 99;
 
 export const KB_MAP: Record<string, number> = {
   KeyS: 0,

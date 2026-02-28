@@ -48,6 +48,53 @@
   50% { opacity: 0.5; }
 }
 
+.offsetSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.offsetBtn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  background: #111122;
+  color: #00d4ff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.offsetBtn:hover {
+  border-color: #00d4ff;
+  background: #1a1a3a;
+}
+
+.offsetValue {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  color: #ffd700;
+  min-width: 100px;
+  text-align: center;
+}
+
+.offsetReset {
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.offsetHint {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
 .rawMonitor {
   background: #0a0a14;
   border: 1px solid #2a2a4a;

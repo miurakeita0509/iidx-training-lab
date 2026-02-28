@@ -8,6 +8,7 @@ import ScratchPractice from './components/modes/ScratchPractice';
 import RecognitionTraining from './components/modes/RecognitionTraining';
 import TapSpeed from './components/modes/TapSpeed';
 import ControllerSettings from './components/modes/ControllerSettings';
+import SongPlay from './components/modes/SongPlay';
 import styles from './App.module.css';
 
 export default function App() {
@@ -47,6 +48,7 @@ export default function App() {
           {mode === 'recognition' && <RecognitionTraining />}
           {mode === 'speed' && <TapSpeed />}
           {mode === 'settings' && <ControllerSettings />}
+          {mode === 'play' && <SongPlay side={side} />}
         </div>
       </div>
     </>

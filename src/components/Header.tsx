@@ -1,6 +1,8 @@
+import { useRef } from 'react';
 import { useInput } from '../contexts/InputContext';
 import type { Side } from '../types';
 import { useMetronome } from '../hooks/useMetronome';
+import { useBGMPlayer } from '../hooks/useBGMPlayer';
 import styles from './Header.module.css';
 
 interface Props {
@@ -18,6 +20,13 @@ export default function Header({
 }: Props) {
   const { connected, deviceName } = useInput();
   useMetronome(metronomeBpm, metronomeActive);
+  const bgm = useBGMPlayer();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) bgm.loadFile(file);
+  }
 
   return (
     <header className={styles.header}>
@@ -47,6 +56,43 @@ export default function Header({
             max={400}
             onChange={e => onMetronomeBpmChange(Number(e.target.value))}
           />
+        </div>
+        <div className={styles.bgm}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <button
+            className={styles.bgmBtn}
+            onClick={() => fileInputRef.current?.click()}
+            title="BGMファイルを選択"
+          >📂</button>
+          <button
+            className={`${styles.bgmBtn} ${styles.bgmPreset}`}
+            onClick={() => bgm.loadUrl(`${import.meta.env.BASE_URL}bgm/Chromatic Rush.mp3`, 'Chromatic Rush')}
+            title="Chromatic Rush を再生"
+          >♪</button>
+          {bgm.fileName && (
+            <>
+              <span className={styles.bgmName}>
+                {bgm.fileName.length > 16 ? bgm.fileName.slice(0, 16) + '…' : bgm.fileName}
+              </span>
+              <button className={styles.bgmBtn} onClick={bgm.toggle} title="再生/一時停止">
+                {bgm.isPlaying ? '⏸' : '▶'}
+              </button>
+              <input
+                type="range"
+                className={styles.bgmVolume}
+                min={0} max={1} step={0.05}
+                value={bgm.volume}
+                onChange={e => bgm.setVolume(Number(e.target.value))}
+                title="音量"
+              />
+            </>
+          )}
         </div>
         <div className={`${styles.status} ${connected ? styles.connected : ''}`}>
           <span className={styles.dot} />

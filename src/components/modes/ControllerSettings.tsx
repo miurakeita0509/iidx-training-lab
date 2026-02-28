@@ -1,17 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
 import { useInput } from '../../contexts/InputContext';
-import { DEFAULT_MAPPING } from '../../types';
+import { DEFAULT_MAPPING, JUDGMENT_OFFSET_KEY, JUDGMENT_OFFSET_MIN, JUDGMENT_OFFSET_MAX } from '../../types';
 import { useGameLoop } from '../../hooks/useGameLoop';
 import styles from './ModePanel.module.css';
 import settingsStyles from './ControllerSettings.module.css';
 
 type WaitTarget = number | 'scratchUp' | 'scratchDown' | null;
 
+function getStoredOffset(): number {
+  const stored = localStorage.getItem(JUDGMENT_OFFSET_KEY);
+  if (stored === null) return 0;
+  const val = parseInt(stored, 10);
+  return isNaN(val) ? 0 : val;
+}
+
 export default function ControllerSettings() {
   const { mapping, setMapping, rawGamepad, connected } = useInput();
   const [waiting, setWaiting] = useState<WaitTarget>(null);
   const [rawText, setRawText] = useState('接続待ち...');
   const waitingRef = useRef<WaitTarget>(null);
+  const [offset, setOffset] = useState(getStoredOffset);
 
   useEffect(() => { waitingRef.current = waiting; }, [waiting]);
 
@@ -57,6 +65,19 @@ export default function ControllerSettings() {
   const resetMapping = () => {
     setMapping({ ...DEFAULT_MAPPING });
     setWaiting(null);
+  };
+
+  const changeOffset = (delta: number) => {
+    setOffset(prev => {
+      const next = Math.max(JUDGMENT_OFFSET_MIN, Math.min(JUDGMENT_OFFSET_MAX, prev + delta));
+      localStorage.setItem(JUDGMENT_OFFSET_KEY, String(next));
+      return next;
+    });
+  };
+
+  const resetOffset = () => {
+    setOffset(0);
+    localStorage.setItem(JUDGMENT_OFFSET_KEY, '0');
   };
 
   return (
@@ -107,6 +128,18 @@ export default function ControllerSettings() {
           <div className={settingsStyles.mapLabel}>皿閾値</div>
           <div className={settingsStyles.mapValue}>{mapping.scratchThreshold}</div>
         </div>
+      </div>
+      <h3 className={settingsStyles.sectionTitle}>判定タイミング調整</h3>
+      <div className={settingsStyles.offsetSection}>
+        <button className={settingsStyles.offsetBtn} onClick={() => changeOffset(-1)}>−</button>
+        <span className={settingsStyles.offsetValue}>
+          {offset >= 0 ? '+' : ''}{offset}ms
+        </span>
+        <button className={settingsStyles.offsetBtn} onClick={() => changeOffset(1)}>+</button>
+        <button className={`btn btn-secondary ${settingsStyles.offsetReset}`} onClick={resetOffset}>RESET</button>
+      </div>
+      <div className={settingsStyles.offsetHint}>
+        FAST が多い → + 方向 / SLOW が多い → − 方向
       </div>
       <h3 className={settingsStyles.sectionTitle}>RAW入力モニター</h3>
       <div className={settingsStyles.rawMonitor}>{rawText}</div>

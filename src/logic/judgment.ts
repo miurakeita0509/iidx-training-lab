@@ -1,17 +1,26 @@
-import type { Note, JudgmentType, Lane } from '../types';
+import type { Note, JudgmentType, FastSlow, Lane } from '../types';
 import { JUDGMENT_WINDOWS } from '../types';
+
+export interface JudgeResult {
+  note: Note;
+  judgment: JudgmentType;
+  fastSlow: FastSlow;
+}
 
 export function judgeHit(
   lane: Lane,
   notes: Note[],
-  now: number
-): { note: Note; judgment: JudgmentType } | null {
+  now: number,
+  offset: number = 0
+): JudgeResult | null {
+  const adjustedNow = now + offset;
+
   let best: Note | null = null;
   let bestDiff = Infinity;
 
   for (const note of notes) {
     if (note.judged || note.lane !== lane) continue;
-    const diff = Math.abs(now - note.hitTime);
+    const diff = Math.abs(adjustedNow - note.hitTime);
     if (diff < JUDGMENT_WINDOWS.bad && diff < bestDiff) {
       bestDiff = diff;
       best = note;
@@ -28,7 +37,13 @@ export function judgeHit(
   else if (bestDiff <= JUDGMENT_WINDOWS.good) judgment = 'good';
   else judgment = 'bad';
 
-  return { note: best, judgment };
+  // FAST/SLOW: null for P-GREAT
+  let fastSlow: FastSlow = null;
+  if (judgment !== 'pgreat') {
+    fastSlow = adjustedNow < best.hitTime ? 'fast' : 'slow';
+  }
+
+  return { note: best, judgment, fastSlow };
 }
 
 export function calcFallTime(bpm: number, hs: number): number {

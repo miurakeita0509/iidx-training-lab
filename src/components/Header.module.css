@@ -90,6 +90,47 @@
   text-align: center;
 }
 
+/* BGM Player */
+.bgm {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bgmBtn {
+  width: 32px;
+  height: 28px;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  background: transparent;
+  color: #8888aa;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.bgmBtn:hover { background: #1a1a2e; color: #c0c0d0; }
+.bgmPreset { color: #7b2ff7; border-color: #7b2ff7; }
+.bgmPreset:hover { background: #1a0a2e; color: #a055ff; }
+
+.bgmName {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: #8888aa;
+}
+
+.bgmVolume {
+  width: 60px;
+  accent-color: #00d4ff;
+  cursor: pointer;
+}
+
 /* Controller status */
 .status {
   display: flex;
