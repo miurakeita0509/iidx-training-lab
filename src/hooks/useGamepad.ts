@@ -103,9 +103,12 @@ export function useGamepad(mapping: Mapping) {
     }
 
     if (scratchDetected) {
-      // Rising-edge detection: only fire onScratch when scratch transitions from inactive to active.
-      // This prevents BAD-hammering caused by repeated calls while the turntable is held/moving.
-      if (!s.scratchActive) {
+      // Fire onScratch on:
+      // 1. Rising edge: scratch transitions from inactive to active
+      // 2. Direction change: scratch direction reverses while still active
+      // This matches real IIDX where each directional change counts as a new input.
+      const dirChanged = s.scratchActive && s.scratchDir !== 0 && scratchDirection !== s.scratchDir;
+      if (!s.scratchActive || dirChanged) {
         onScratch(scratchDirection);
       }
       s.scratchActive = true;

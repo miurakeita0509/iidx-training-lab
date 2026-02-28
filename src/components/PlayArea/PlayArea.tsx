@@ -48,7 +48,7 @@ function getJudgmentOffset(): number {
 }
 
 export default function PlayArea({ running, bpm, hs, getLanes, side, onStop }: Props) {
-  const { onKeyPress, onScratch, getMergedInput } = useInput();
+  const { onKeyPress, onScratch } = useInput();
 
   const lanesRef = useRef<HTMLDivElement>(null);
   const playAreaRef = useRef<HTMLDivElement>(null);
@@ -67,6 +67,7 @@ export default function PlayArea({ running, bpm, hs, getLanes, side, onStop }: P
   const judgmentsRef = useRef<JudgmentCounts>({ pgreat: 0, great: 0, good: 0, bad: 0, poor: 0 });
   const judgmentTimerRef = useRef(0);
   const offsetRef = useRef(0);
+  const pendingScratchTimeRef = useRef(0); // timestamp of last scratch that didn't hit a note
 
   const [result, setResult] = useState<PlayResult | null>(null);
   const laneConfig = buildLaneConfig(side);
@@ -148,11 +149,17 @@ export default function PlayArea({ running, bpm, hs, getLanes, side, onStop }: P
   useEffect(() => {
     if (!running) return;
     return onScratch(() => {
-      const res = judgeHit('scratch', notesRef.current, performance.now(), offsetRef.current);
+      const now = performance.now();
+      const res = judgeHit('scratch', notesRef.current, now, offsetRef.current);
       if (res) {
         if (res.note.el) res.note.el.remove();
         flashLane('scratch');
         registerJudgment(res.judgment, res.fastSlow);
+        pendingScratchTimeRef.current = 0; // consumed
+      } else {
+        // No scratch note in range yet — save timestamp so the game loop
+        // can retroactively judge when a note enters the window.
+        pendingScratchTimeRef.current = now;
       }
     });
   }, [running, onScratch, flashLane, registerJudgment]);
@@ -175,6 +182,7 @@ export default function PlayArea({ running, bpm, hs, getLanes, side, onStop }: P
       if (comboRef.current) comboRef.current.style.opacity = '0';
       if (judgmentRef.current) judgmentRef.current.style.opacity = '0';
       if (fastSlowRef.current) fastSlowRef.current.style.opacity = '0';
+      pendingScratchTimeRef.current = 0;
     }
   }, [running]);
 
@@ -256,16 +264,23 @@ export default function PlayArea({ running, bpm, hs, getLanes, side, onStop }: P
       }
     }
 
-    // Scratch polling: while turntable is spinning and a scratch note is in the BAD window,
-    // judge it. This handles cases where the user started spinning before the rising edge
-    // fired (avoids missing notes due to timing of edge detection).
-    const merged = getMergedInput();
-    if (merged.scratchActive) {
-      const res = judgeHit('scratch', notesRef.current, now, offsetRef.current);
-      if (res) {
-        if (res.note.el) res.note.el.remove();
-        flashLane('scratch');
-        registerJudgment(res.judgment, res.fastSlow);
+    // Deferred scratch judgment: if the user scratched slightly early (before the note
+    // entered the BAD window), we saved the timestamp. Now check if any scratch note
+    // has entered the window since that pending scratch — if so, judge it.
+    // This consumes the pending scratch (1 motion = 1 note, matching real IIDX).
+    if (pendingScratchTimeRef.current > 0) {
+      const scratchAge = now - pendingScratchTimeRef.current;
+      if (scratchAge <= JUDGMENT_WINDOWS.bad) {
+        const res = judgeHit('scratch', notesRef.current, pendingScratchTimeRef.current, offsetRef.current);
+        if (res) {
+          if (res.note.el) res.note.el.remove();
+          flashLane('scratch');
+          registerJudgment(res.judgment, res.fastSlow);
+          pendingScratchTimeRef.current = 0;
+        }
+      } else {
+        // Too old — discard
+        pendingScratchTimeRef.current = 0;
       }
     }
   });
