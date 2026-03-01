@@ -4,6 +4,7 @@ import type { Chart } from '../../data/charts';
 import { ALL_CHARTS, getChartLanes } from '../../data/charts';
 import PlayArea from '../PlayArea/PlayArea';
 import type { PlayResult } from '../PlayArea/PlayArea';
+import modeStyles from './ModePanel.module.css';
 import styles from './SongPlay.module.css';
 
 interface Props {
@@ -167,14 +168,16 @@ export default function SongPlay({ side }: Props) {
             setScreen('select');
           }}>✕ 中断</button>
         </div>
-        <PlayArea
-          running={running}
-          bpm={selectedChart.bpm}
-          hs={2}
-          getLanes={getLanes}
-          side={side}
-          onStop={handleStop}
-        />
+        <div className={modeStyles.playLayout}>
+          <PlayArea
+            running={running}
+            bpm={selectedChart.bpm}
+            hs={2}
+            getLanes={getLanes}
+            side={side}
+            onStop={handleStop}
+          />
+        </div>
       </div>
     );
   }

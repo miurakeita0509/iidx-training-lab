@@ -211,7 +211,7 @@ export default function PlayArea({ running, bpm, hs, getLanes, side, onStop }: P
     const interval = calcNoteInterval(bpm);
     const elapsed = now - startTimeRef.current;
     const playH = playAreaRef.current?.clientHeight ?? 500;
-    const judgY = playH - 60;
+    const judgY = playH * 0.95; // judgment line at 5% from bottom
 
     if (elapsed >= 1000 && now - lastGenRef.current >= interval) {
       lastGenRef.current = now;
@@ -225,7 +225,7 @@ export default function PlayArea({ running, bpm, hs, getLanes, side, onStop }: P
 
         // Charge note: taller element
         if (chargeDuration) {
-          const noteH = Math.max(12, (chargeDuration / fallTime) * judgY);
+          const noteH = Math.max(6, (chargeDuration / fallTime) * judgY);
           el.style.height = noteH + 'px';
           el.classList.add(styles.chargeNote);
         }
@@ -251,9 +251,9 @@ export default function PlayArea({ running, bpm, hs, getLanes, side, onStop }: P
       if (note.judged) continue;
       const timeLeft = note.hitTime - now;
       const progress = 1 - timeLeft / fallTime;
-      const noteH = note.el ? note.el.offsetHeight : 12;
+      const noteH = note.el ? note.el.offsetHeight : 6;
       // Anchor the bottom edge of the note at the judgment line position
-      const y = progress * judgY - (noteH - 12);
+      const y = progress * judgY - (noteH - 6);
       if (note.el) note.el.style.top = y + 'px';
 
       if (timeLeft < -JUDGMENT_WINDOWS.bad) {

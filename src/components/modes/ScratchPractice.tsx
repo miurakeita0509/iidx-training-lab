@@ -95,7 +95,9 @@ export default function ScratchPractice({ side, onBpmChange }: Props) {
           {running ? 'STOP' : 'START'}
         </button>
       </div>
-      <PlayArea running={running} bpm={bpm} hs={hs} getLanes={getLanes} side={side} />
+      <div className={styles.playLayout}>
+        <PlayArea running={running} bpm={bpm} hs={hs} getLanes={getLanes} side={side} />
+      </div>
     </div>
   );
 }

@@ -1,20 +1,31 @@
 .playArea {
   position: relative;
-  width: 100%;
-  height: 500px;
+  width: 340px;
+  height: 75vh;
+  min-height: 500px;
+  max-height: 900px;
   background: #0a0a14;
   border: 1px solid #2a2a4a;
   border-radius: 6px;
   overflow: hidden;
   user-select: none;
+  flex-shrink: 0;
 }
 
 @media (max-width: 900px) {
-  .playArea { height: 360px; }
+  .playArea {
+    width: 280px;
+    height: 65vh;
+    max-height: 700px;
+  }
 }
 
 @media (max-width: 600px) {
-  .playArea { height: 260px; }
+  .playArea {
+    width: 100%;
+    height: 60vh;
+    max-height: 500px;
+  }
   .judgmentDisplay { font-size: 20px; }
   .comboDisplay { font-size: 26px; }
 }
@@ -35,12 +46,18 @@
   border-right: none;
 }
 
+/* Lane widths — real IIDX proportions:
+   scratch 22%, white keys 12.5% each (×4 = 50%), blue keys 9.33% each (×3 = 28%) */
 .scratchLane {
-  width: 12%;
+  width: 22%;
 }
 
-.lane:not(.scratchLane) {
-  flex: 1;
+.whiteLane {
+  width: 12.5%;
+}
+
+.blueLane {
+  width: 9.33%;
 }
 
 .laneBg {
@@ -61,9 +78,10 @@
   background: #2244cc;
 }
 
+/* Judgment line at 5% from bottom — matches real IIDX */
 .judgmentLine {
   position: absolute;
-  bottom: 60px;
+  bottom: 5%;
   left: 0;
   right: 0;
   height: 3px;
@@ -72,9 +90,10 @@
   z-index: 5;
 }
 
+/* Note height 6px — thinner bars matching real IIDX */
 .note {
   position: absolute;
-  height: 12px;
+  height: 6px;
   border-radius: 2px;
   z-index: 3;
   transition: none;
@@ -88,40 +107,41 @@
 }
 
 .whiteNote {
-  left: 8%;
-  width: 84%;
+  left: 4%;
+  width: 92%;
   background: rgba(224, 224, 240, 0.85);
   box-shadow: 0 0 4px rgba(224, 224, 240, 0.3);
 }
 
 .blueNote {
-  left: 8%;
-  width: 84%;
+  left: 4%;
+  width: 92%;
   background: rgba(34, 68, 204, 0.85);
   box-shadow: 0 0 4px rgba(34, 68, 204, 0.3);
 }
 
 .judgmentDisplay {
   position: absolute;
-  bottom: 80px;
+  bottom: calc(5% + 20px);
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Orbitron', sans-serif;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   z-index: 10;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s;
+  white-space: nowrap;
 }
 
 .fastSlowDisplay {
   position: absolute;
-  bottom: 66px;
+  bottom: calc(5% + 6px);
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Orbitron', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   z-index: 10;
   pointer-events: none;
@@ -131,11 +151,11 @@
 
 .comboDisplay {
   position: absolute;
-  bottom: 120px;
+  bottom: calc(5% + 56px);
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Orbitron', sans-serif;
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 900;
   color: #ffd700;
   z-index: 10;
@@ -148,7 +168,7 @@
   top: 8px;
   right: 12px;
   font-family: 'Orbitron', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   color: #888;
   z-index: 10;
   text-align: right;
@@ -160,7 +180,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 80px;
+  height: 12%;
   opacity: 0;
   z-index: 2;
   pointer-events: none;

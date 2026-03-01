@@ -118,21 +118,24 @@ export default function PatternPractice({ side, onBpmChange }: Props) {
           {running ? 'STOP' : 'START'}
         </button>
       </div>
-      {/* キー選択 */}
-      <div className={styles.keySelect}>
-        <span className={styles.keySelectLabel}>使用鍵盤:</span>
-        {KEY_LABELS.map((label, i) => (
-          <button
-            key={i}
-            className={`${styles.keySelectBtn} ${activeKeys[i] ? styles.keySelectActive : ''}`}
-            onClick={() => toggleKey(i)}
-            disabled={running}
-          >
-            {label}
-          </button>
-        ))}
+      <div className={styles.playLayout}>
+        <PlayArea running={running} bpm={bpm} hs={hs} getLanes={getLanes} side={side} />
+        <div className={styles.playLayoutControls}>
+          <div className={styles.keySelect}>
+            <span className={styles.keySelectLabel}>使用鍵盤:</span>
+            {KEY_LABELS.map((label, i) => (
+              <button
+                key={i}
+                className={`${styles.keySelectBtn} ${activeKeys[i] ? styles.keySelectActive : ''}`}
+                onClick={() => toggleKey(i)}
+                disabled={running}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-      <PlayArea running={running} bpm={bpm} hs={hs} getLanes={getLanes} side={side} />
     </div>
   );
 }
